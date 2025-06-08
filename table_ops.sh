@@ -4,6 +4,7 @@ check_table_is_exist()
 {
     [ -f "${1}_data" ] || [ -f "${1}_meta_data" ]
 }
+
 validate_table_name() {
     local name="$1"
     
@@ -32,6 +33,8 @@ select op in list_all_tables create drop insert select delete update
 do 
     case $op in 
         list_all_tables)
+            echo "Existing Tables:"
+            ls *_data 2>/dev/null | sed 's/_data$//'
         ;;
 
         create)
@@ -50,11 +53,11 @@ do
                     echo "ERROR: Table '$name' already exists."
                 else
                     touch "${name}_data"
-                    touch "${name}_meta_data"
+                    touch "${name}_meta"
                     echo "Table '$name' is created"
                     break
                 fi
-                
+
             done
             ;;
 
