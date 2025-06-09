@@ -1,6 +1,14 @@
 #! /usr/bin/bash
 
-#=========================================================================
+#==============================list tables functions===========================================
+list_tables()
+{
+    echo "Existing Tables:"
+    ls *_meta_data 2>/dev/null | sed 's/_meta_data$//'
+}
+
+
+#=============================create table functions============================================
 check_table_is_exist()
 {
     if [[ -f "${1}_data" ]] || [[ -f "${1}_meta_data" ]]; then
@@ -100,7 +108,6 @@ create_table()
 
 #=========================================================================
 
-
 #=========================================================================
 
 PS3="Choose table operation (press Enter to show menu again): "
@@ -108,9 +115,8 @@ select op in list_all_tables create drop insert select delete update
 do 
     case $op in 
         list_all_tables)
-            echo "Existing Tables:"
-            ls *_meta_data 2>/dev/null | sed 's/_meta_data$//'
-        ;;
+            list_tables
+            ;;
 
         create)
             create_table
