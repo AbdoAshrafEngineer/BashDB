@@ -10,6 +10,34 @@ check_table_is_exist()
     fi
 }
 
+get_existing_table_name()
+{
+    while true;
+    do
+        read -rp "Enter table name: " table_name
+        if check_table_is_exist $table_name
+        then
+            echo "${table_name} is found ✅"
+            break
+        else
+            echo "❌ ${table_name} is not exist"
+        fi
+    done
+}
+
+read_table_metadata()
+{
+    local table="$1"
+    local -n names_ref="$2"
+    local -n types_ref="$3" 
+
+    while IFS=":" read -r col_name col_type _
+    do
+        names_ref+=("$col_name")
+        types_ref+=("$col_type")
+    done < "${table}_meta_data"
+}
+
 #==============================list tables functions===========================================
 list_tables()
 {
@@ -108,46 +136,17 @@ create_table()
 
 #=======================insert data functions==================================================
 
-
-
-get_existing_table_name()
-{
-    while true;
-    do
-        read -rp "Enter table name to insert into: " table_name
-        if check_table_is_exist $table_name
-        then
-            echo "${table_name} is found ✅"
-            break
-        else
-            echo "❌ ${table_name} is not exist"
-        fi
-    done
-}
-
-read_table_metadata()
-{
-    local table="$1"
-    local -n names_ref="$2"
-    local -n types_ref="$3" 
-
-    while IFS=":" read -r col_name col_type _
-    do
-        names_ref+=("$col_name")
-        types_ref+=("$col_type")
-    done < "${table}_meta_data"
-}
 validate_value() 
 {
     local value="$1"
     local type="$2"
 
     case "$type" in
-        integer)
-            [[ "$value" =~ ^[0-9]+$ ]] && return 0
-            ;;
         string)
             [[ -n "$value" ]] && return 0
+            ;;
+        integer)
+            [[ "$value" =~ ^[0-9]+$ ]] && return 0
             ;;
     esac
 
@@ -198,11 +197,138 @@ insert_data()
     insert_row "$table_name" col_names col_types
     echo "Row inserted successfully.✅"
 }
+#==============================select table functions===========================================
+is_table_empty()
+{
+    local table=$1
+    if [[ -s ${table}_data ]]
+    then
+        return 1
+    else
+        return 0
+    fi
+}
+show_all_columns()
+{
+    local -n columns=$1
+    echo "Available columns:"
+    for col in "${columns[@]}"
+    do
+        echo "- $col"
+    done
+}
 
+select_all_rows()
+{
+    local table=$1
+    local -n headers=$2
+    echo "🔎 Showing all records:"
+    echo "${headers[*]}" | tr ' ' ':'
+    cat "${table}_data"
+}
+
+get_column_index() 
+{
+    local -n arr=$1
+    local target="$2"
+    for i in "${!arr[@]}"; do
+        if [[ "${arr[i]}" == "$target" ]]; then
+            echo "$i"
+            return 0
+        fi
+    done
+    return 1
+}
+
+select_column_from_table()
+{
+    local table=$1
+    local -n headers=$2
+    read -rp "Enter column name to select: " selected_col
+    local index 
+    index=$(get_column_index headers "$selected_col") || {
+        echo "❌ Column '$selected_col' not found."
+        return 1
+    }
+
+    echo "🔎 Values from column '$selected_col':"
+    cut -d: -f$((index + 1)) "${table}_data"
+}
+
+select_records_by_column_value() 
+{
+    local table="$1"
+    local -n headers=$2
+
+    read -rp "Enter column name to filter by: " filter_col
+    local index
+    index=$(get_column_index headers "$filter_col") || {
+        echo "❌ Column '$filter_col' not found."
+        return 1
+    }
+
+    read -rp "Enter value to search for in column '$filter_col': " filter_value
+
+    echo "🔎 Records where '$filter_col' = '$filter_value':"
+    # Print headers first
+    echo "${headers[*]}" | tr ' ' ':'
+
+    # Search data for matching records (exact match on the field)
+    # cut -d: -f$((index+1)) extracts the column for comparison
+    awk -F: -v col=$((index+1)) -v val="$filter_value" '
+        $col == val { print }
+    ' "${table}_data"
+}
+
+select_data()
+{
+    local old_ps3=$PS3
+    local table_name
+    get_existing_table_name || return 1
+
+    if is_table_empty "$table_name"; then
+        echo "⚠️  Table '$table_name' is empty."
+        return 0
+    fi
+
+    local -a col_names col_types
+    read_table_metadata $table_name col_names col_types
+
+    show_all_columns col_names
+    echo
+    PS3="choose the select type: "
+    select op in select_all_rows select_column_from_table select_records_by_column_value
+    do
+        case $op in
+            select_all_rows)
+                select_all_rows $table_name col_names
+                ;;
+
+            select_column_from_table)
+                select_column_from_table $table_name col_names
+                ;;
+
+            select_records_by_column_value)
+                select_records_by_column_value $table_name col_names
+                ;;
+
+            select_records_by_column_value)
+                select_records_by_column_value $table_name col_names
+                ;;
+
+            *)
+                echo "❌ Invalid option."
+                ;;
+        esac
+        break
+    done
+
+    PS3=$old_ps3
+}
 #=========================================================================
 
 PS3="Choose table operation (press Enter to show menu again): "
-select op in list_all_tables create insert drop select delete update 
+select op in list_all_tables create insert select drop delete update 
 do 
     case $op in 
         list_all_tables)
@@ -217,18 +343,22 @@ do
             insert_data
             ;;
 
-        drop)
-        ;;
         select)
-        ;;
+            select_data
+            ;;
+
+        drop)
+            ;;
+        
 
         delete)
-        ;;
+            ;;
 
         update)
-        ;;
+            ;;
+
         *)
             echo "choose valid table operation"
-        ;;
+            ;;
     esac
 done
