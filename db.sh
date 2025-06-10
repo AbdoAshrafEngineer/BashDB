@@ -66,54 +66,54 @@ function connect_db() {
     then
         cd "$db_name"
         echo "Connected to database '$db_name'."
-        . ../../tables.sh "$db_name"
+        . ../table_ops.sh "$db_name"
     fi
 }
 
 # Main menu
-function main_menu() {
-    echo "DBMS Main Menu"
-    PS3="Select an option: "
-    select option in "Make DBMS Directory" "Change to DBMS Directory" "Database Operations" "Exit"
-    do
-        case $option in
-            "Make DBMS Directory")
-                read -p "Enter DBMS directory name: " dbms_dir
-                mkdir -p "$dbms_dir"
-                echo "DBMS directory '$dbms_dir' created."
-                ;;
-            "Change to DBMS Directory")
-                read -p "Enter DBMS directory name: " dbms_dir
-                if [ -d "$dbms_dir" ]
-                then
-                    cd "$dbms_dir"
-                    echo "Changed to directory '$dbms_dir'."
-                    db_operations_menu
-                else
-                    echo "Directory does not exist."
-                fi
-                ;;
-            "Database Operations")
-                db_operations_menu
-                ;;
-            "Exit")
-                echo "Goodbye!"
-                exit 0
-                ;;
-            *)
-                echo "Invalid option"
-                ;;
-        esac
-        break
-    done
-    main_menu
-}
+# function main_menu() {
+#     echo "DBMS Main Menu"
+#     PS3="Select an option: "
+#     select option in "Make DBMS Directory" "Change to DBMS Directory" "Database Operations" "Exit"
+#     do
+#         case $option in
+#             "Make DBMS Directory")
+#                 read -p "Enter DBMS directory name: " dbms_dir
+#                 mkdir -p "$dbms_dir"
+#                 echo "DBMS directory '$dbms_dir' created."
+#                 ;;
+#             "Change to DBMS Directory")
+#                 read -p "Enter DBMS directory name: " dbms_dir
+#                 if [ -d "$dbms_dir" ]
+#                 then
+#                     cd "$dbms_dir"
+#                     echo "Changed to directory '$dbms_dir'."
+#                     db_operations_menu
+#                 else
+#                     echo "Directory does not exist."
+#                 fi
+#                 ;;
+#             "Database Operations")
+#                 db_operations_menu
+#                 ;;
+#             "Exit")
+#                 echo "Goodbye!"
+#                 exit 0
+#                 ;;
+#             *)
+#                 echo "Invalid option"
+#                 ;;
+#         esac
+#         break
+#     done
+#     main_menu
+# }
 
 # Database operations menu
 function db_operations_menu() {
     echo "Database Operations"
     PS3="Select an operation: "
-    select operation in "Create Database" "List Databases" "Drop Database" "Connect to Database" "Back to Main Menu"
+    select operation in "Create Database" "List Databases" "Drop Database" "Connect to Database"
     do
         case $operation in
             "Create Database")
@@ -128,9 +128,6 @@ function db_operations_menu() {
             "Connect to Database")
                 connect_db
                 ;;
-            "Back to Main Menu")
-                db_operations_menu
-                ;;
             *)
                 echo "Invalid option"
                 ;;
@@ -141,8 +138,8 @@ function db_operations_menu() {
 }
 
 # Start the main menu
-main_menu
-
+# main_menu
+db_operations_menu
                 
         
 

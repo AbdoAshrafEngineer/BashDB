@@ -328,7 +328,7 @@ select_data()
 #=========================================================================
 
 PS3="Choose table operation (press Enter to show menu again): "
-select op in list_all_tables create insert select drop delete update 
+select op in list_all_tables create insert select drop delete update exit 
 do 
     case $op in 
         list_all_tables)
@@ -357,7 +357,10 @@ do
 
         update)
             ;;
-
+        exit)
+            echo bye table_ops
+            break
+            ;;
         *)
             echo "choose valid table operation"
             ;;
