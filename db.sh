@@ -111,30 +111,30 @@ function connect_db() {
 
 # Database operations menu
 function db_operations_menu() {
-    echo "Database Operations"
-    PS3="Select an operation: "
-    select operation in "Create Database" "List Databases" "Drop Database" "Connect to Database"
-    do
-        case $operation in
-            "Create Database")
-                create_db
-                ;;
-            "List Databases")
-                list_dbs
-                ;;
-            "Drop Database")
-                drop_db
-                ;;
-            "Connect to Database")
-                connect_db
-                ;;
-            *)
-                echo "Invalid option"
-                ;;
-        esac
-        break
+    while true; do
+        echo "Database Operations"
+        PS3="Select an operation: "
+        select operation in "Create Database" "List Databases" "Drop Database" "Connect to Database"
+        do
+            case $operation in
+                "Create Database")
+                    create_db
+                    ;;
+                "List Databases")
+                    list_dbs
+                    ;;
+                "Drop Database")
+                    drop_db
+                    ;;
+                "Connect to Database")
+                    connect_db
+                    ;;
+                *)
+                    echo "Invalid option"
+                    ;;
+            esac
+        done
     done
-    db_operations_menu
 }
 
 # Start the main menu

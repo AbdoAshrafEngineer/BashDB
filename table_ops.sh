@@ -460,7 +460,6 @@ do
             
         exit)
             break
-            cd ..
             ;;
 
         *)
