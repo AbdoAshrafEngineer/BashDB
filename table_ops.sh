@@ -1,5 +1,5 @@
 #! /usr/bin/bash
-
+#==============================common functions===========================================
 check_table_is_exist()
 {
     if [[ -f "${1}_data" ]] || [[ -f "${1}_meta_data" ]]
@@ -104,7 +104,7 @@ define_columns()
         fi
         
         PS3="Choose data type (1 or 2): "
-        select col_type in string integer; do
+        select col_type in integer string; do
             if [[ -n "$col_type" ]]; then
                 break
             else
@@ -341,6 +341,34 @@ drop_table()
         echo "❌ Drop operation cancelled."
     fi
 }
+#==============================delete row functions===========================================
+
+delete_row()
+{
+    local table_name
+    get_existing_table_name || return 1
+
+    if is_table_empty "$table_name"; then
+        echo "⚠️  Table '$table_name' is empty. Nothing to delete."
+        return 0
+    fi
+
+    local -a col_names col_types
+    read_table_metadata "$table_name" col_names col_types
+
+    local pk_name="${col_names[0]}"
+    read -rp "Enter value of primary key ($pk_name) to delete: " pk_value
+
+    if ! cut -d: -f1 "${table_name}_data" | grep -qx "$pk_value"; then
+        echo "❌ No record found with primary key = '$pk_value'."
+        return 1
+    fi
+
+    awk -F ":" -v pk="$pk_value" '$1 != pk' "${table_name}_data" > temp_data && mv temp_data "${table_name}_data"
+    
+    echo "Record with primary key '$pk_value' has been deleted.✅"
+}
+
 
 #=========================================================================
 
@@ -369,6 +397,7 @@ do
             ;;
         
         delete)
+            delete_row
             ;;
 
         update)
