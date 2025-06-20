@@ -143,7 +143,7 @@ validate_value()
 
     case "$type" in
         string)
-            [[ -n "$value" ]] && return 0
+            [[ "$value" =~ ^[a-zA-Z]+$  ]] && return 0
             ;;
         integer)
             [[ "$value" =~ ^[0-9]+$ ]] && return 0
@@ -326,7 +326,7 @@ select_data()
     PS3=$old_ps3
 }
 
-#==============================drop table functions===========================================
+#==============================drop table function===========================================
 drop_table()
 {
     local table_name
@@ -341,7 +341,7 @@ drop_table()
         echo "❌ Drop operation cancelled."
     fi
 }
-#==============================delete row functions===========================================
+#==============================delete row function==========================================
 
 delete_row()
 {
@@ -365,9 +365,62 @@ delete_row()
     fi
 
     awk -F ":" -v pk="$pk_value" '$1 != pk' "${table_name}_data" > temp_data && mv temp_data "${table_name}_data"
-    
+
     echo "Record with primary key '$pk_value' has been deleted.✅"
 }
+
+#==============================update row function===========================================
+update_row()
+{
+    local table_name
+    get_existing_table_name || return 1
+
+    if is_table_empty "$table_name"; then
+        echo "⚠️  Table '$table_name' is empty. Nothing to update."
+        return 0
+    fi
+
+    local -a col_names col_types
+    read_table_metadata "$table_name" col_names col_types
+
+    local pk_name="${col_names[0]}"
+    read -rp "Enter value of primary key ($pk_name) to update: " pk_value
+
+    if ! grep -q "^$pk_value:" "${table_name}_data"; then
+        echo "❌ No record found with primary key = '$pk_value'."
+        return 1
+    fi
+
+    show_all_columns col_names
+    read -rp "Enter the column name you want to update: " col_name
+
+    local col_index
+    col_index=$(get_column_index col_names "$col_name") || {
+        echo "❌ Column '$col_name' not found."
+        return 1
+    }
+
+    if [[ "$col_index" == 0 ]]; then
+        echo "❌ Cannot update the primary key."
+        return 1
+    fi
+
+    local col_type="${col_types[col_index]}"
+    read -rp "Enter new value for column '$col_name' (type: $col_type): " new_value
+
+    if ! validate_value "$new_value" "$col_type"; then
+        echo "❌ Invalid value for type $col_type"
+        return 1
+    fi
+
+    awk -F ":" -v pk="$pk_value" -v col=$((col_index+1)) -v val="$new_value" -v OFS=":" '
+    $1 == pk { $col = val } { print }
+    ' "${table_name}_data" > temp_data
+
+    mv temp_data "${table_name}_data"
+    echo "✅ Updated '$col_name' in record with PK '$pk_value'."
+}
+
 
 
 #=========================================================================
@@ -401,6 +454,7 @@ do
             ;;
 
         update)
+            update_row
             ;;
 
         *)
