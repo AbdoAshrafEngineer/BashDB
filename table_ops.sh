@@ -457,6 +457,11 @@ do
             update_row
             ;;
 
+        exit)
+            break
+            cd ..
+            ;;
+
         *)
             echo "choose valid table operation"
             ;;
