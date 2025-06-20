@@ -456,10 +456,7 @@ do
         update)
             update_row
             ;;
-        exit)
-            echo bye table_ops
-            break
-            ;;
+
         *)
             echo "choose valid table operation"
             ;;
