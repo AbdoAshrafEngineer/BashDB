@@ -457,6 +457,7 @@ do
             update_row
             ;;
 
+            
         exit)
             break
             cd ..
