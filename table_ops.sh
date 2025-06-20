@@ -325,6 +325,23 @@ select_data()
 
     PS3=$old_ps3
 }
+
+#==============================drop table functions===========================================
+drop_table()
+{
+    local table_name
+    get_existing_table_name || return 1
+
+    echo "⚠️  Are you sure you want to delete table '$table_name'? This action cannot be undone."
+    read -rp "Type 'yes' to confirm: " confirm
+    if [[ "$confirm" == "yes" ]]; then
+        rm -f "${table_name}_data" "${table_name}_meta_data"
+        echo "Table '$table_name' has been dropped.✅"
+    else
+        echo "❌ Drop operation cancelled."
+    fi
+}
+
 #=========================================================================
 
 PS3="Choose table operation (press Enter to show menu again): "
@@ -348,10 +365,9 @@ do
             ;;
 
         drop)
+            drop_table
             ;;
         
-        
-
         delete)
             ;;
 
