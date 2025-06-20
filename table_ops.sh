@@ -426,7 +426,7 @@ update_row()
 #=========================================================================
 
 PS3="Choose table operation (press Enter to show menu again): "
-select op in list_all_tables create insert select drop delete update 
+select op in list_all_tables create insert select drop delete update exit
 do 
     case $op in 
         list_all_tables)
