@@ -459,8 +459,8 @@ do
 
             
         exit)
-            break
             cd ..
+            break
             ;;
 
         *)
